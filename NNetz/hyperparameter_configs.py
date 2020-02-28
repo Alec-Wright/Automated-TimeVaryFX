@@ -13,7 +13,7 @@ with open(path_to_config_file, 'r') as f:
 def main(output_dir):
 
 	hids = [4,8,16,32,64]	
-	lays = [1::4]	
+	lays = [1,2,3,4]	
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
