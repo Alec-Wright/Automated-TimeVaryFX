@@ -12,21 +12,20 @@ with open(path_to_config_file, 'r') as f:
 
 def main(output_dir):
 
-    pedal = ['HT5M10', 'Mesa550Crunch3']
-    epochs = [50,100,200,500]
+	hids = [4,8,16,32,64]	
+	lays = [1:4]	
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     i = 0
 
-    for peds in pedal:
-    	for eps in epochs:
+    for hs in hids:
+    	for lay in lays:
 
-        	configs = {'pre_filt': 'b_Awght_mk2.csv',
-            	        'batch_size': 8,
-                	    'pedal': peds,
-                   		'low_pass': 1,
-                   		'epochs': eps}
+        	configs = {'batch_size': 8,
+        				'hidden_size': hs,
+        				'num_lays': lay,
+                   		'epochs': 200}
         	filename = 'config{:01}.json'.format(i)
         	with open(os.path.join(output_dir, filename), 'w') as f:
         		json.dump(configs, f) # Write to dict to JSON

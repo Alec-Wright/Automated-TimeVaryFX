@@ -23,7 +23,7 @@ parser.add_argument('--seg_len', '-sl', type=int,   default=44100, help='Length 
 
 # arguments for the network training
 parser.add_argument('--learn_rate',   '-lr',  type=float, default=0.0005,  help='learning rate')
-parser.add_argument('--epochs',       '-eps', type=int,   default=150,   help='Number of training epochs to run')
+parser.add_argument('--epochs',       '-eps', type=int,   default=750,   help='Number of training epochs to run')
 parser.add_argument('--batch_size',   '-bs',  type=int,   default=10,    help='Training mini-batch size')
 parser.add_argument('--val_freq', '-vfr', type=int,   default=1,    help='Validation Frequency (in epochs)')
 parser.add_argument('--loss_fcn',     '-lf',  default='ESR',        help='MSE or ESR or ESRPre')
