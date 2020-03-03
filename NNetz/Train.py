@@ -120,9 +120,7 @@ def train(data, network, optimizer, dirPath, args):
 def test(data, network, dirPath, args):
 
     tst_ch = args.test_chunk
-    network.init_hidden(args.cond_vals)
-    filts = 0
-    filtstest = 0
+    network.init_hidden(2)
 
     with torch.no_grad():
 
@@ -130,10 +128,6 @@ def test(data, network, dirPath, args):
 
         if not args.pre_filt:
             loss_fnESR = ESRLoss()
-        elif args.pre_filt == 'adap':
-            print('adaptive filtering active')
-            loss_fnESR = ESRLossAdapPreEmph()
-            filtstest = data.test_set[2]
         elif type(args.pre_filt) == str:
             with open('Configs/' + args.pre_filt) as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
@@ -149,8 +143,6 @@ def test(data, network, dirPath, args):
 
         output = torch.empty(data.test_set[1].shape)
 
-        #network.load_state_dict(torch.load(dirPath + '/modelBest.pt'))
-
         for l in range(int(output.size()[0] / tst_ch)):
             output[l * tst_ch:(l + 1) * tst_ch] = network(data.test_set[0][l * tst_ch:(l + 1) * tst_ch])
             network.set_hidden(network.hidden)
@@ -159,29 +151,28 @@ def test(data, network, dirPath, args):
             output[(l + 1) * tst_ch:-1] = network(data.test_set[0][(l + 1) * tst_ch:-1])
 
         test_loss = loss_fn(output, data.test_set[1])
-        #test_loss_clf = loss_fnESR(output, data.test_set[1]) + loss_fnDC(output, data.test_set[1])
 
-        test_lossclf = loss_fnESR(output, data.test_set[1])
+        #test_lossclf = loss_fnESR(output, data.test_set[1])
 
-        test_lossclf += loss_fnDC(output, data.test_set[1])
+        #test_lossclf += loss_fnDC(output, data.test_set[1])
 
-        if args.cond_vals > 1:
-            for i in range(args.cond_vals):
+        #if args.cond_vals > 1:
+        #    for i in range(args.cond_vals):
 
-                sf.write(dirPath + '/testoutput' + str(i) + '.wav', output.cpu().numpy()[:, i, 0], 44100)
+        #        sf.write(dirPath + '/testoutput' + str(i) + '.wav', output.cpu().numpy()[:, i, 0], 44100)
 
-            flat = output.cpu().numpy().flatten('F')
-            sf.write(dirPath + '/outputcat.wav', flat, 44100)
-        else:
-            testlosses = np.empty([1])
-            testlosses[0] = test_loss.item()
-            testlossesclf = np.empty([1])
-            testlossesclf[0] = test_lossclf.item()
-            sf.write(dirPath + '/testoutput.wav', output.cpu().numpy()[:, 0, 0], 44100)
-            with open(dirPath + '/tloss.txt', 'w') as f:
-                f.write(str(testlosses))
-            with open(dirPath + '/tlossclf.txt', 'w') as f:
-                f.write(str(testlossesclf))
+        #    flat = output.cpu().numpy().flatten('F')
+        #    sf.write(dirPath + '/outputcat.wav', flat, 44100)
+        #else:
+        testlosses = np.empty([1])
+        testlosses[0] = test_loss.item()
+        #testlossesclf = np.empty([1])
+        #testlossesclf[0] = test_lossclf.item()
+        sf.write(dirPath + '/testoutput.wav', output.cpu().numpy()[:, 0, 0], 44100)
+        with open(dirPath + '/tloss.txt', 'w') as f:
+            f.write(str(testlosses))
+        #with open(dirPath + '/tlossclf.txt', 'w') as f:
+        #    f.write(str(testlossesclf))
 
     with open(dirPath + "/config.json", "w") as output:
         output.write(json.dumps(vars(args)))
