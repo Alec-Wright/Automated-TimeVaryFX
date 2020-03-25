@@ -1,5 +1,5 @@
-clear all
-close all
+% clear all
+% close all
 
 %% 1 - User Parameters
 
@@ -212,7 +212,7 @@ function [predLFO] = peak_picker( x, LFOLen, spacing)
         peak(i).max = max(peak(i).bin(:,1));
         peak(i).min = min(peak(i).bin(:,1));
         
-        peak(i).bin(:,1) = (peak(i).bin(:,1) - peak(i).min)...
+        peak(i).bin = (peak(i).bin - peak(i).min)...
               /(peak(i).max - peak(i).min);
         
         xAx = 1:spacing:spacing*length(peak(i).bin);
@@ -242,14 +242,13 @@ function [predLFO] = peak_picker( x, LFOLen, spacing)
         peak(i).errorSinc = TargLFO(1:length(peak(i).predLFOSinc)) - peak(i).predLFOSinc;
         
         peak(i).meanErr = mean(abs(peak(i).error));
-        peak(i).meanErrSinc = mean(abs(peak(i).errorSinc));
         peak(i).meanHeight = mean(abs(peak(i).bin(:,2)));
         peak(i).meanWid = mean(abs(peak(i).bin(:,3)));
         peak(i).meanProm = mean(abs(peak(i).bin(:,4)));
         peak(i).binDiff = peak(i).max - peak(i).min;
         
-        plot(abs(peak(i).error))
-        plot(abs(peak(i).errorSinc))
+        plot(peak(i).error)
+        plot(peak(i).errorSinc)
         legend('Target','Predicted Spline','Predicted Sinc', 'Error Spline', 'Error Sinc')
         title('PredLFO + error')
         
