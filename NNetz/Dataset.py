@@ -46,6 +46,38 @@ class DataSet:
                 print(args.data_location + '/npData/train/' + args.pedal + '-input.npy: ''Dataset not found - exiting')
                 exit()
 
+        if args.segments:
+            segments = args.segments
+            total_length = len(inp_train)
+            seg_len = int(total_length/6)
+            segments[0] -= 1
+
+            inp_trainnew = inp_train[segments[0] * seg_len:(segments[0] + 1)*seg_len, :]
+            tgt_trainnew = tgt_train[segments[0] * seg_len:(segments[0] + 1) * seg_len]
+            inp_valnew   = inp_val[segments[0] * seg_len:(segments[0] + 1) * seg_len, :]
+            tgt_valnew   = tgt_val[segments[0] * seg_len:(segments[0] + 1) * seg_len]
+            inp_testnew  = inp_test[segments[0] * seg_len:(segments[0] + 1)*seg_len, :]
+            tgt_testnew  = tgt_test[segments[0] * seg_len:(segments[0] + 1) * seg_len]
+
+            if len(segments) > 1:
+                for segs in segments[1:]:
+                    segs -= 1
+                    inp_trainnew = np.concatenate((inp_trainnew,inp_train[segs * seg_len:(segs + 1)*seg_len, :]), 0)
+                    tgt_trainnew = np.concatenate((tgt_trainnew, tgt_train[segs * seg_len:(segs + 1) * seg_len]), 0)
+
+                    inp_valnew = np.concatenate((inp_valnew, inp_val[segs * seg_len:(segs + 1) * seg_len, :]), 0)
+                    tgt_valnew = np.concatenate((tgt_valnew, tgt_val[segs * seg_len:(segs + 1) * seg_len]), 0)
+
+                    inp_testnew = np.concatenate((inp_testnew, inp_test[segs * seg_len:(segs + 1) * seg_len, :]), 0)
+                    tgt_testnew = np.concatenate((tgt_testnew, tgt_test[segs * seg_len:(segs + 1) * seg_len]), 0)
+
+            inp_train = inp_trainnew
+            tgt_train = tgt_trainnew
+            inp_val = inp_valnew
+            tgt_val = tgt_valnew
+            inp_test = inp_testnew
+            tgt_test = tgt_testnew
+
         # I ended up hard coding the sample rate as its not saved into the numpy file
         self.fs = 44100
         if inp_train.ndim == 1:

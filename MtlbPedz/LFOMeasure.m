@@ -7,11 +7,11 @@ close all
 plots = 0;
 
 % Speeds to test at
-speeds = [40:20:100];
+speeds = [0:20:100];
 % speeds = [100];
 fs = 44100;
 % Number of chirps to include in the chirp train
-chirps = 201;
+chirps = 1200;
 % Spacing between chrip starts (in ms)
 spacing = 30;
 % Number of all-pass filters and coefficient

@@ -1,7 +1,5 @@
 function [x, chrpLen] = ChirpMaker(chirps, spacing, M, a) 
 
-    
- 
     delhf = (1 - a^2)/(1 + 2*a*cos(pi) + a^2);
     dellf = (1 - a^2)/(1 + 2*a*cos(0) + a^2);
     grpdel = max(delhf,dellf);
