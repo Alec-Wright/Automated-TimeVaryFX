@@ -40,7 +40,7 @@ parser.add_argument('--pre_filt',   '-pc',   default=[1, -0.85], help='FIR filte
                                                                   'or set to "adap" to do adaptive pre-emph filtering')
 parser.add_argument('--low_pass',   '-lp', type=int,  default=0, help='flag to determine is lowpass filtering is applied'
                                                               'in the loss function [1, 0.85] FIR filter')
-parser.add_argument('--segments',   '-sgs', type=int,  default=0)
+parser.add_argument('--segments',   '-sgs', type=int,  default=[3])
 
 # arguments for loading, if restarting training
 parser.add_argument('--cur_epoch',   '-cue',   type=int,    default=0,  help='epoch number to start on')

@@ -48,28 +48,34 @@ class DataSet:
 
         if args.segments:
             segments = args.segments
-            total_length = len(inp_train)
-            seg_len = int(total_length/6)
+            tr_len = len(inp_train)
+            tr_len = int(tr_len/6)
+
+            val_len = len(inp_val)
+            val_len = int(val_len/6)
+
+            test_len = len(inp_test)
+            test_len = int(test_len/6)
             segments[0] -= 1
 
-            inp_trainnew = inp_train[segments[0] * seg_len:(segments[0] + 1)*seg_len, :]
-            tgt_trainnew = tgt_train[segments[0] * seg_len:(segments[0] + 1) * seg_len]
-            inp_valnew   = inp_val[segments[0] * seg_len:(segments[0] + 1) * seg_len, :]
-            tgt_valnew   = tgt_val[segments[0] * seg_len:(segments[0] + 1) * seg_len]
-            inp_testnew  = inp_test[segments[0] * seg_len:(segments[0] + 1)*seg_len, :]
-            tgt_testnew  = tgt_test[segments[0] * seg_len:(segments[0] + 1) * seg_len]
+            inp_trainnew = inp_train[segments[0] * tr_len:(segments[0] + 1)*tr_len, :]
+            tgt_trainnew = tgt_train[segments[0] * tr_len:(segments[0] + 1) * tr_len]
+            inp_valnew   = inp_val[segments[0] * val_len:(segments[0] + 1) * val_len, :]
+            tgt_valnew   = tgt_val[segments[0] * val_len:(segments[0] + 1) * val_len]
+            inp_testnew  = inp_test[segments[0] * test_len:(segments[0] + 1)*test_len, :]
+            tgt_testnew  = tgt_test[segments[0] * test_len:(segments[0] + 1) * test_len]
 
             if len(segments) > 1:
                 for segs in segments[1:]:
                     segs -= 1
-                    inp_trainnew = np.concatenate((inp_trainnew,inp_train[segs * seg_len:(segs + 1)*seg_len, :]), 0)
-                    tgt_trainnew = np.concatenate((tgt_trainnew, tgt_train[segs * seg_len:(segs + 1) * seg_len]), 0)
+                    inp_trainnew = np.concatenate((inp_trainnew,inp_train[segs * tr_len:(segs + 1)*tr_len, :]), 0)
+                    tgt_trainnew = np.concatenate((tgt_trainnew, tgt_train[segs * tr_len:(segs + 1) * tr_len]), 0)
 
-                    inp_valnew = np.concatenate((inp_valnew, inp_val[segs * seg_len:(segs + 1) * seg_len, :]), 0)
-                    tgt_valnew = np.concatenate((tgt_valnew, tgt_val[segs * seg_len:(segs + 1) * seg_len]), 0)
+                    inp_valnew = np.concatenate((inp_valnew, inp_val[segs * val_len:(segs + 1) * val_len, :]), 0)
+                    tgt_valnew = np.concatenate((tgt_valnew, tgt_val[segs * val_len:(segs + 1) * val_len]), 0)
 
-                    inp_testnew = np.concatenate((inp_testnew, inp_test[segs * seg_len:(segs + 1) * seg_len, :]), 0)
-                    tgt_testnew = np.concatenate((tgt_testnew, tgt_test[segs * seg_len:(segs + 1) * seg_len]), 0)
+                    inp_testnew = np.concatenate((inp_testnew, inp_test[segs * test_len:(segs + 1) * test_len, :]), 0)
+                    tgt_testnew = np.concatenate((tgt_testnew, tgt_test[segs * test_len:(segs + 1) * test_len]), 0)
 
             inp_train = inp_trainnew
             tgt_train = tgt_trainnew
