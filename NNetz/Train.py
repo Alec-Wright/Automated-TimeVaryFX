@@ -120,7 +120,7 @@ def train(data, network, optimizer, dirPath, args):
 def test(data, network, dirPath, args):
 
     tst_ch = args.test_chunk
-    network.init_hidden(2)
+    network.init_hidden(1)
 
     with torch.no_grad():
 

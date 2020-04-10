@@ -110,7 +110,7 @@ if __name__ == "__main__":
             args.cur_epoch = 0
     if args.cur_epoch == args.epochs:
         print('training already complete - exiting')
-        exit()
+        #exit()
 
     # Otherwise create directory for output
     if not args.cur_epoch:
