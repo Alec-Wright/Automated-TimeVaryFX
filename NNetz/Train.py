@@ -77,15 +77,15 @@ def train(data, network, optimizer, dirPath, args):
             with torch.no_grad():
                 # Initialise hidden state
                 network.init_hidden(data.val_set[0].shape[1])
-                #val_output = torch.empty(data.val_set[1].shape)
-                val_output = network(data.val_set[0])
+                val_output = torch.empty(data.val_set[1].shape)
+                #val_output = network(data.val_set[0])
                 # Process validation set
-                #for l in range(int(val_output.size()[0]/args.val_chunk)):
-                #    val_output[l*args.val_chunk:(l+1)*args.val_chunk] = network(data.val_set[0][l*args.val_chunk:(l+1)*args.val_chunk])
-                #    network.set_hidden(network.hidden)
+                for l in range(int(val_output.size()[0]/args.val_chunk)):
+                    val_output[l*args.val_chunk:(l+1)*args.val_chunk] = network(data.val_set[0][l*args.val_chunk:(l+1)*args.val_chunk])
+                    network.set_hidden(network.hidden)
                 # If the validation set doesn't divide evenly into the validation chunk length, process the remainder
-                #if not (val_output.size()[0]/args.val_chunk).is_integer():
-                #    val_output[(l+1)*args.val_chunk:-1] = network(data.val_set[0][(l+1)*args.val_chunk:-1])
+                if not (val_output.size()[0]/args.val_chunk).is_integer():
+                    val_output[(l+1)*args.val_chunk:-1] = network(data.val_set[0][(l+1)*args.val_chunk:-1])
 
                 # Calculate the losses
                 val_loss = loss_fnESR(val_output, data.val_set[1])
