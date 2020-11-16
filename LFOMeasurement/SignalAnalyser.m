@@ -56,7 +56,7 @@ classdef SignalAnalyser
             fAx = fAx_full(ax_st:ax_en);
             % Calcultate the required FFT length to achieve f_res freq resolution
             N = fs/f_res;
-            chirps = zeros(ch_i(2) - ch_i(1), length(ch_i));
+            chirps = zeros(round(fs*(ch_i(2) - ch_i(1))), length(ch_i));
             
           % Find frequency resolution and starting frequency from fAx
             f_st = fAx(1);
@@ -66,7 +66,7 @@ classdef SignalAnalyser
             % Iterate over each chirp
             for m = 1:length(ch_i) - 1
                 % Isolate chirps
-                chirps(:,m) = proc_sig(ch_i(m):ch_i(m+1) - 1);
+                chirps(:,m) = proc_sig(round(fs*ch_i(m)):round(fs*ch_i(m+1)) - 1);
             end
             % fft and truncate spectrogram
             spec = fft(chirps, N);

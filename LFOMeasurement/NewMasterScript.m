@@ -50,9 +50,11 @@ for r = 1:length(Rate)
                 AnlySig(r) = AnlySig(r).SpecExtract(0.5, i);
                 AnlySig(r) = AnlySig(r).LFOTrack(i, 5);
                 
-                lfo =  AnlySig(r).Measured_LFOs{i-1, 'Measured_LFO'};
-                tAx =  AnlySig(r).Measured_LFOs{i-1, 'LFO_time_axis'};
+                lfo =  AnlySig(r).Measured_LFOs{i-1, 'Measured_LFO'}{1,1};
+                tAx =  AnlySig(r).Measured_LFOs{i-1, 'LFO_time_axis'}{1,1};
                 plot(tAx{1,1}, lfo{1,1});
+                
+                LFOFits(r) = LFOFitter();
                     
                 i = i + 1;
             end

@@ -68,7 +68,7 @@ classdef SignalHolder
             % Concatenate chirps and normalise
             tst_sig = repmat(chirp_signal, [1,num_chirps]);
             tst_sig = [zeros(1,s_sil*fs), tst_sig, zeros(1, e_sil*fs)]';
-            chp_sts = {s_sil*fs:ch_spc_s:T*fs - e_sil*fs - 1};
+            chp_sts = {s_sil:ch_spc_s/fs:T - e_sil};
             tst_sig = {tst_sig/max(abs(tst_sig))};
         end
         function [chirp, n] = ...
