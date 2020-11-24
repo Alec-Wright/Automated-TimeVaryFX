@@ -54,20 +54,22 @@ classdef SignalHolder
 
         %   Convert chirp length and spacing into samples
             ch_spc_s = ceil(ch_spc*fs/1000);
+            ch_spc = 1000*ch_spc_s/44100;
 
         %   Synthesise Chirp
             [chirp_signal, n] = SignalHolder.freq_design_chirp...
                                 (method, ch_len, f_st, f_en, 10, fs);
 
         %   Create the chirp train (choo choo!)
-            num_chirps = floor((T - s_sil - e_sil)*1000/ch_spc);
+            num_chirps = ceil((T - s_sil - e_sil)*1000/ch_spc);
             if ch_spc_s > length(chirp_signal)
                 chirp_signal =[chirp_signal,...
                     zeros(1, ch_spc_s - length(chirp_signal))];
             end
             % Concatenate chirps and normalise
             tst_sig = repmat(chirp_signal, [1,num_chirps]);
-            tst_sig = [zeros(1,s_sil*fs), tst_sig, zeros(1, e_sil*fs)]';
+            tst_sig = [zeros(1, s_sil*fs), tst_sig, zeros(1, e_sil*fs)]';
+            tst_sig = tst_sig(1:T*fs);
             chp_sts = {s_sil:ch_spc_s/fs:T - e_sil};
             tst_sig = {tst_sig/max(abs(tst_sig))};
         end
