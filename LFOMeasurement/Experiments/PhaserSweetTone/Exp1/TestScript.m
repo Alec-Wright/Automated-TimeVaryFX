@@ -13,7 +13,7 @@ import LFOFitter
 PedalName = 'PhaserSweetTone';
 Digi = 1;
 Rate = [0.1, 0.3, 0.6];
-SNR = [10, 20, 30, 40];
+SNR = [40, 50, 60];
 
 % Test Signal Parameters
 ch_type = 1;
@@ -138,4 +138,5 @@ if size(LFOFits(1).LFOs,1) < 1
     end
     disp('Saving Data')
     save('Measurements.mat', 'Signals', 'ProcSigs', 'AnlySig', 'LFOFits') 
+    save('Results.mat', 'LFOFits')
 end

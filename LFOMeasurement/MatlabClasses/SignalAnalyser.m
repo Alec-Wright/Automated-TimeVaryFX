@@ -129,7 +129,7 @@ classdef SignalAnalyser
             
             LFO_freqs = [flip(backwards_f);...
                 obj.Spectrograms{spec_num, "notch_start_fr"}; forwards_f];
-            LFO_t = ch_sts' + grp_d(2*pi*LFO_freqs);
+            LFO_t = ch_sts(1:end-1)' + grp_d(2*pi*LFO_freqs);
 
             new_row = {{LFO_freqs}, {LFO_t}, smooth_f, spec_num};
             obj.Measured_LFOs = [obj.Measured_LFOs; new_row];
@@ -199,24 +199,24 @@ classdef SignalAnalyser
             % In case one, arg is < pi/2, new freq is approx one time
             % step further along the lfo
 %                 w_case1 = A*sin(arg + 2*dt*lfo_w) + C;
-                w_case1 = prev_w + 1.5*dt*A*lfo_w;
+                w_case1 = prev_w + 3*dt*A*lfo_w;
                 
             % The new notch freq affects where the actual time
             % difference
 %                 w_case1 = A*sin(arg + 2*dt*lfo_w +...
 %                     grp_d(w_case1)) + C;
 
-                w_case2 = prev_w - 1.5*dt*A*lfo_w;
+                w_case2 = prev_w - 3*dt*A*lfo_w;
                 
 %                 w_case2 = A*sin(pi - arg + 2*dt*lfo_w) + C;
 % 
 %                 w_case2 = A*sin(pi - arg + 2*dt*lfo_w +...
 %                     grp_d(w_case2)) + C;
-                plot(fAx, ch_spec)
-                xline(w_case1/(2*pi))
-                xline(min_w/(2*pi), 'Color', 'r')
-                xline(max_w/(2*pi), 'Color', 'r')
-                xline(w_case2/(2*pi))
+%                 plot(fAx, ch_spec)
+%                 xline(w_case1/(2*pi))
+%                 xline(min_w/(2*pi), 'Color', 'r')
+%                 xline(max_w/(2*pi), 'Color', 'r')
+%                 xline(w_case2/(2*pi))
 
                 x_range = sort([w_case1, w_case2]);
 
@@ -338,11 +338,11 @@ classdef SignalAnalyser
 % 
 %                 w_case2 = A*sin(pi - arg + 2*dt*lfo_w +...
 %                     grp_d(w_case2)) + C;
-                plot(fAx, ch_spec)
-                xline(w_case1/(2*pi))
-                xline(min_w/(2*pi), 'Color', 'r')
-                xline(max_w/(2*pi), 'Color', 'r')
-                xline(w_case2/(2*pi))
+%                 plot(fAx, ch_spec)
+%                 xline(w_case1/(2*pi))
+%                 xline(min_w/(2*pi), 'Color', 'r')
+%                 xline(max_w/(2*pi), 'Color', 'r')
+%                 xline(w_case2/(2*pi))
 
                 x_range = sort([w_case1, w_case2]);
 
@@ -359,7 +359,6 @@ classdef SignalAnalyser
 %             ntch_t = ch_off(ntch_fr);
             ntch_fr = ntch_fr/(2*pi);
         end
-
     end
     
     methods (Access = 'protected', Static = true)
@@ -368,7 +367,6 @@ classdef SignalAnalyser
 
         
     methods (Access = 'public', Static = true)
-
 
     end
 end

@@ -1,6 +1,8 @@
 classdef SignalHolder
     properties
         Signals
+        SaveLoc
+        SegLen
     end
     methods
         function obj = SignalHolder()

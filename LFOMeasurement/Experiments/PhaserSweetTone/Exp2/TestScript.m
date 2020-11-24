@@ -12,7 +12,7 @@ import LFOFitter
 PedalName = 'PhaserSweetTone';
 Digi = 1;
 Rate = [0.1, 0.3, 0.6];
-SNR = [20, 25, 30, 35];
+SNR = [40, 50, 60];
 
 % Test Signal Parameters
 ch_type = [1, 2];
@@ -119,20 +119,14 @@ if size(LFOFits(1).LFOs,1) < 1
             tAx =  AnlySig(r).Measured_LFOs{lfo_i, 'LFO_time_axis'}{1,1};
             tot = tAx(end) - tAx(1);
             tst = tAx(1);
-            
-            for t = 1:size(tfrac)
-                % Ignore parts of the measured LFO according to tfrac
-                tf1 = tfrac(t,1);
-                tf2 = tfrac(t,2);
-                lfot = lfo(tAx<tot*tf1 + tst | tAx>=tot*tf2 + tst);
-                tAxt = tAx(tAx<tot*tf1 + tst | tAx>=tot*tf2 + tst);
-                
-                % Fit an LFO to the measured LFO
-                LFOFits(r) = LFOFits(r).RectSineGridSearch...
-                    (lfot, tAxt, init_f, lfo_i, tf1 + 1 - tf2);
-            end
+ 
+            % Fit an LFO to the measured LFO
+            LFOFits(r) = LFOFits(r).RectSineGridSearch...
+                (lfo, tAx, init_f, lfo_i, 1);
+
         end 
     end
     disp('Saving Data')
-    save('Measurements.mat', 'Signals', 'ProcSigs', 'AnlySig', 'LFOFits') 
+    save('Measurements.mat', 'Signals', 'ProcSigs', 'AnlySig', 'LFOFits')
+    save('Results.mat', 'LFOFits')
 end

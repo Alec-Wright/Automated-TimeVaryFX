@@ -59,13 +59,14 @@ classdef SignalProcessor
         function signal = SigGet(obj, sig_num)
             signal = obj.ProcessedSignals{sig_num,'processed_signal'}{1,1};
         end
-        function obj = SigLoad(obj, sig_num)
-            in = audioread(strcat('TestSignals/testsignal', string(sig_num),'.wav'));
-            out = audioread(strcat('TestSignals/testsignal', string(sig_num), '-out.wav'));
+    end
+    methods (Access = 'public', Static = true)
+        function [out] = SigLoad(loc)
+            in = audioread(strcat(loc ,'-input.wav'));
+            out = audioread(strcat(loc ,'-output.wav'));
             [r, lags] = xcorr(in(1:44100*10), out(1:44100*10,2));
             [~, i] = max(r);
-            signal = out(-lags(i) + 1:-lags(i) + length(in),1);
-            obj.ProcessedSignals{sig_num, 'processed_signal'} = {signal};
+            out = out(-lags(i) + 1:-lags(i) + length(in),1);
         end
     end
 end
