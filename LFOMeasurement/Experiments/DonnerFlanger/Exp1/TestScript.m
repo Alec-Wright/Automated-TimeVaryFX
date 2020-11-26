@@ -48,7 +48,6 @@ if ~exist('Signals')
         AnlySig = AnlySig.PrelimAnly(1);
         
 
-
         Signals = Signals.SigGen(1, 15, 20, st_f, en_f, 10, fs);
         ProcSigs = ProcSigs.SigProc(Signals.SigGet(2), rate, 40, fs);
         while 1

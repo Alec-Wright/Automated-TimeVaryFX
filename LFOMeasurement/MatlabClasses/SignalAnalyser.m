@@ -67,7 +67,7 @@ classdef SignalAnalyser
             for m = 1:length(ch_i) - 1
                 % Isolate chirps
                 chirps(:,m) = proc_sig(round(fs*ch_i(m)):round(fs*ch_i(m+1)) - 1);
-                plot(chirps(:,m))
+%                 plot(chirps(:,m))
             end
             % fft and truncate spectrogram
             spec = fft(chirps, N);
@@ -358,6 +358,47 @@ classdef SignalAnalyser
             end
 %             ntch_t = ch_off(ntch_fr);
             ntch_fr = ntch_fr/(2*pi);
+        end
+        
+        function obj = BatchSpecExtract(obj, f_res, proc_sig)
+            
+            fs = obj.Signals{1,'fs'};
+
+            %Desired frequency resolution
+            fAx_full = 0:f_res:fs - f_res;
+            % find the frequency axis start/end bins on the full frequency axis
+            ax_st = round(obj.Signals{1,'f_st'}/f_res) + 1;
+            ax_en = round(obj.Signals{1,'f_en'}/f_res) + 1;
+            % Truncate the frequency axis to just cover frequencies in the chirp
+            fAx = fAx_full(ax_st:ax_en);
+            % Find frequency resolution and starting frequency from fAx
+            f_st = fAx(1);
+            f_to_ind = @(freq) round(1 + (freq - f_st)/f_res);
+            f_round = @(freq) round(freq/f_res)*f_res;
+            
+                        % Calcultate the required FFT length to achieve f_res freq resolution
+            N = fs/f_res;
+            
+            for n = 1:size(obj.Signals,1)
+                ch_i = obj.Signals{n,'chirp_starts'}{1,1};
+                chirps = zeros(round(fs*(ch_i(2) - ch_i(1))), length(ch_i)-1);
+                
+                % Iterate over each chirp
+                for m = 1:length(ch_i) - 1
+                    % Isolate chirps
+                    chirps(:,m) = proc_sig(round(fs*ch_i(m)):round(fs*ch_i(m+1)) - 1);
+%                     plot(chirps(:,m))
+                end
+                % fft and truncate spectrogram
+                spec = fft(chirps, N);
+                spec = abs(spec(ax_st:ax_en,:));
+                
+                new_row = ...
+                {{spec}, {fAx}, f_to_ind, f_round, 1, n, 0, 0};
+                obj.Spectrograms = [obj.Spectrograms; new_row];
+                
+            end
+           
         end
     end
     

@@ -36,7 +36,7 @@ classdef LFOFitter
             local_best_error = [10e12];
             error_mat = [];
             
-            MaxTrue = max(smooth(LFO, 5));
+            MaxTrue = max(smooth(LFO, 1));
             MinTrue = min(LFO);
             AmpTrue = (MaxTrue - MinTrue);
             
@@ -207,5 +207,84 @@ classdef LFOFitter
             predmax = sqrt(A^2 + B^2);
             LFO_pred = predmax.*((LFO_pred-C)./predmax).^n + C;
         end
+
+        function [lfo_p] = SimpleSineFit(lfo, tAx, f_init)
+            T_init = 1/f_init;
+        
+            Amp = max(lfo) - min(lfo);
+            C = min(lfo);
+            
+            [m,i] = max(lfo(tAx< tAx(1) + T_init));
+            
+            test_freqs = linspace(f_init*0.9, f_init*1.1, 50);
+            
+            best_error = 1e12;
+            errormat = zeros(length(test_freqs), 1);
+            
+            for n = 1:length(test_freqs)
+            
+                phases =  test_freqs(n)*pi*tAx;
+                offset = pi/2 - phases(i); 
+                phases = phases + offset;
+
+                pred_lfo = Amp*abs(sin(phases)) + C;
+%                 plot(tAx,pred_lfo)
+%                 hold on
+%                 plot(tAx,lfo)
+%                 hold off
+                
+                error = mean((lfo-pred_lfo).^2);
+                error_mat(n) = error;
+                if error < best_error
+                    best_error = error;
+                    
+                    best_freq = test_freqs(n);
+                    best_lfo = pred_lfo;
+                end
+            end
+            
+            f = LFOFitter.GradDescent(lfo, tAx, best_freq, Amp, C, i);
+            phi = pi/2 - f*pi*tAx(i); 
+%             plot(tAx,best_lfo)
+%             hold on
+%             plot(tAx,lfo)
+%             hold off
+            lfo_p = Amp*abs(sin(f*pi*tAx + phi)) + C;
+        end
+        
+        function [f] = GradDescent(lfo, tAx, f, A, C, i)
+            
+            phi = pi/2 - f*pi*tAx(i); 
+            yp = A*abs(sin(f*pi*tAx + phi)) + C;
+            error_mat = [f, mean((yp - lfo).^2)];
+            
+            Asq = A.^2;
+            
+            for n = 1:100
+                phi = pi/2 - f*pi*tAx(i); 
+                
+                a = 2*pi*Asq*tAx.*sin(pi*f*tAx + phi).*cos(pi*f*tAx + phi);
+                b = (abs(A*sin(pi*f*tAx + phi))  + C - lfo);
+                c = abs(A*sin(pi*f*tAx + phi));
+                dw = mean((a.*b)./c);
+                
+                s = sign(dw);
+                step_size = (dw*1e-8)/(n*10);
+                step_size = min([0.001, abs(step_size)]);
+                f = f - s*step_size;
+                error_mat(end+1, 1) = f;
+                phi = pi/2 - f*pi*tAx(i); 
+                yp = A*abs(sin(f*pi*tAx + phi)) + C;
+                error_mat(end, 2) = mean((yp - lfo).^2);
+%                 
+            end
+%             error_mat = sortrows(error_mat);
+            
+            [~, i2] = min(error_mat(:,2));
+            
+            f = error_mat(i2,1);
+            
+        end
+        
     end
 end
