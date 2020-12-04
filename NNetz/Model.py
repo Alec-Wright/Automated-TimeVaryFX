@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(
     by some kind of periodic LFO''')
 
 # arguments for the training/test data locations and file names
-parser.add_argument('--pedal', '-p', default='SwTo', help='Pedal to be modelled')
+parser.add_argument('--pedal', '-p', default='DonnerFlanger', help='Pedal to be modelled')
 parser.add_argument('--data_location', '-dl', default='../Dataset', help='Location of the "Data" directory')
 parser.add_argument('--config_location', '-cl', default='Configs', help='Location of the "Configs" directory')
 
@@ -40,7 +40,7 @@ parser.add_argument('--pre_filt',   '-pc',   default=[1, -0.85], help='FIR filte
                                                                   'or set to "adap" to do adaptive pre-emph filtering')
 parser.add_argument('--low_pass',   '-lp', type=int,  default=0, help='flag to determine is lowpass filtering is applied'
                                                               'in the loss function [1, 0.85] FIR filter')
-parser.add_argument('--segments',   '-sgs', type=int,  default=[0])
+parser.add_argument('--segments',   '-sgs', type=int,  default=0)
 
 # arguments for loading, if restarting training
 parser.add_argument('--cur_epoch',   '-cue',   type=int,    default=0,  help='epoch number to start on')

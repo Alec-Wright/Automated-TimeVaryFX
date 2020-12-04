@@ -6,6 +6,7 @@ classdef SignalProcessor
         Rate
         Settings
         SaveLoc
+        
     end
     methods
         function obj = SignalProcessor(PedalName, Digi, Rate)
@@ -51,8 +52,9 @@ classdef SignalProcessor
             else
             % Add the bit where the test signal is saved to file so it can
             % be processed by the pedal
-                audiowrite(strcat(obj.SaveLoc, 'prelim-input.wav'), tst_sig(1:end-1), fs)
-                disp('process file and add -out to end of file name')
+                audiowrite(strcat(obj.SaveLoc, '-input.wav'), tst_sig(1:end-1), fs)
+                disp('process file and add -output to end of file name')
+                pause
             end
             
         end
@@ -61,12 +63,12 @@ classdef SignalProcessor
         end
     end
     methods (Access = 'public', Static = true)
-        function [out] = SigLoad(loc)
+        function [out] = SigLoad(loc, channels)
             in = audioread(strcat(loc ,'-input.wav'));
             out = audioread(strcat(loc ,'-output.wav'));
             [r, lags] = xcorr(in(1:44100*10), out(1:44100*10,2));
             [~, i] = max(r);
-            out = out(-lags(i) + 1:-lags(i) + length(in),1);
+            out = out(-lags(i) + 1:-lags(i) + length(in),1:channels);
         end
     end
 end

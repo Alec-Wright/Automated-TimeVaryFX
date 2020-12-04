@@ -208,11 +208,11 @@ classdef LFOFitter
             LFO_pred = predmax.*((LFO_pred-C)./predmax).^n + C;
         end
 
-        function [lfo_p] = SimpleSineFit(lfo, tAx, f_init)
+        function [lfo_p, params] = SimpleSineFit(lfo, tAx, f_init, Amp, C)
             T_init = 1/f_init;
         
-            Amp = max(lfo) - min(lfo);
-            C = min(lfo);
+%             Amp = max(lfo) - min(lfo);
+%             C = min(lfo);
             
             [m,i] = max(lfo(tAx< tAx(1) + T_init));
             
@@ -244,43 +244,59 @@ classdef LFOFitter
             end
             
             f = LFOFitter.GradDescent(lfo, tAx, best_freq, Amp, C, i);
-            phi = pi/2 - f*pi*tAx(i); 
-%             plot(tAx,best_lfo)
-%             hold on
-%             plot(tAx,lfo)
-%             hold off
+            phi = mod(pi/2 - f*pi*tAx(i),2*pi); 
             lfo_p = Amp*abs(sin(f*pi*tAx + phi)) + C;
+            
+%             plot([t1,t2], si*Amp*abs(sin(f*pi*[t1,t2] + phi)) + C)
+            
+            plot(tAx,lfo_p)
+            hold on
+            plot(tAx,lfo)
+            hold off
+            
+            params = [f, phi];
         end
         
         function [freq] = GradDescent(lfo, tAx, freq, A, C, i)
             
-            phi = @(fr) pi/2 - fr*pi*tAx(i); 
-            yp = @(fr) A*abs(sin(fr*pi*tAx + phi)) + C;
-            error = @(fr) mean(((A*abs(sin(fr*pi*tAx + phi)) + C) - lfo).^2);
-            error_mat = [freq, error(yp)];
+            % Convert to angular frequency, using pi instead of 2 pi
+            % because the frequency of the sine wave is doubled when it is
+            % rectified
+            w = freq*pi;
             Asq = A.^2;
-            dfr = @(freq) (2*pi*Asq*tAx.*sin(pi*freq*tAx + phi).*cos(pi*freq*tAx + phi).*(abs(A*sin(pi*freq*tAx + phi))  + C - lfo))./abs(A*sin(pi*freq*tAx + phi));
             
+            phi_func = @(w) pi/2 - w*tAx(i); 
+            yp_func = @(w, phi) A*abs(sin(w*tAx + phi)) + C;
+            error_func = @(w, phi) mean((A*abs(sin(w*tAx + phi)) + C - lfo).^2);
+            dfr = @(w, phi) (2*Asq*tAx.*sin(w*tAx + phi)...
+                .*cos(w*tAx + phi).*(abs(A*sin(w*tAx + phi))...
+                + C - lfo))./abs(A*sin(w*tAx + phi));
             
-            
+            error_mat = [];
             for n = 1:100
-                phi = pi/2 - freq*pi*tAx(i); 
+                phi = phi_func(w);
+                error = error_func(w, phi);
+                error_mat(end+1, 1:2) = [w/pi, error];
+                dw = mean(dfr(w, phi));
                 
-                a = 2*pi*Asq*tAx.*sin(pi*freq*tAx + phi).*cos(pi*freq*tAx + phi);
-                b = (abs(A*sin(pi*freq*tAx + phi))  + C - lfo);
-                c = abs(A*sin(pi*freq*tAx + phi);
-                dw = mean((a.*b)./c);
-                dw2 = dfr(freq);
                 
-                t = LFOFitter.BackTrackLS(error, error(freq), dw2, 0.5, 0.8);
+%                 yp = yp_func(w, phi);
                 
-                step_size = (dw*1e-8)/(n*10);
-                step_size = min([0.001, abs(step_size)]);
-                freq = freq - t*dw2
-                error_mat(end+1, 1) = freq;
-                phi = pi/2 - freq*pi*tAx(i); 
-                yp = A*abs(sin(freq*pi*tAx + phi)) + C;
-                error_mat(end, 2) = mean((yp - lfo).^2);
+                
+                t = LFOFitter.BackTrackLS(error_func, error, w, phi_func, dw, 0.5, 0.8);
+                
+                s = sign(dw);
+                step_size = min([0.001], abs(t*dw));
+                w = w - s*step_size;
+%                 w = w - t*dw;
+                
+%                 step_size = (dw*1e-8)/(n*10);
+%                 step_size = min([0.001, abs(step_size)]);
+%                 freq = freq - t*dw2
+%                 error_mat(end+1, 1) = freq;
+%                 phi = pi/2 - freq*pi*tAx(i); 
+%                 yp = A*abs(sin(freq*pi*tAx + phi)) + C;
+%                 error_mat(end, 2) = mean((yp - lfo).^2);
 %                 
             end
 %             error_mat = sortrows(error_mat);
@@ -291,10 +307,16 @@ classdef LFOFitter
             
         end
         
-    function [t] = BackTrackLS(f, fx, x, gradx, alpha, beta)
+    function [t] = BackTrackLS(f, fx, x, phi_f, gradx, alpha, beta)
         t = 1;
-        while f(x - t*gradx) > fx - alpha*t*norm(gradx)
-            t = beta*t;
+        phi = phi_f(x);
+        while 1
+%             phi = phi_f(x - t*gradx);
+            if f(x - t*gradx, phi) > fx - alpha*t*norm(gradx)
+                t = beta*t;
+            else
+                break
+            end
         end
     end   
     end

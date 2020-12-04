@@ -11,8 +11,8 @@ import LFOFitter
 % Signal Processing Info
 PedalName = 'PhaserSweetTone';
 Digi = 1;
-Rate = [0.1, 0.3, 0.6];
-SNR = [40, 50, 60];
+Rate = [0.3];
+SNR = [60];
 
 % Test Signal Parameters
 ch_type = [1, 2];
@@ -91,7 +91,7 @@ if ~exist('LFOFits')
         % Extract Spectrograms and track the LFO
         for sigs = 2:size(ProcSigs(r).ProcessedSignals, 1)
             AnlySig(r) = AnlySig(r).SpecExtract(0.5, sigs);
-            AnlySig(r) = AnlySig(r).LFOTrack(sigs - 1, 1);
+            AnlySig(r) = AnlySig(r).LFOTrack(sigs - 1, 1, 1);
             
 %             lfo =  AnlySig(r).Measured_LFOs{end, 'Measured_LFO'}{1,1};
 %             tAx =  AnlySig(r).Measured_LFOs{end, 'LFO_time_axis'}{1,1};
