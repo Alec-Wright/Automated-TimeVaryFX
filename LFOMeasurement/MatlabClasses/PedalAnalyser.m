@@ -43,7 +43,7 @@ classdef PedalAnalyser
             
             PSigs = SignalProcessor(obj.PedalName, 0, obj.Settings);
             PSigs.SaveLoc = strcat(obj.ProcessLoc, '/', obj.PedalName,...
-                [obj.Settings{:}], '-pre');
+                '_',[obj.Settings{:}], '-pre');
             PSigs = PSigs.SigProc(Sigs.SigGet(1),obj.Settings, 40, obj.fs);
             
             obj.PmSigs = Sigs;
@@ -66,9 +66,9 @@ classdef PedalAnalyser
             
             Boundaries = [0];
             data_full = [];
-            for subDir = 1:length(obj.DataLocs)
+            for subDir = 1:length(obj.LoadLocs)
                 % Load each dataset
-                data = audioread(strcat(obj.DataDir, obj.DataLocs(subDir), '/input.wav'));
+                data = audioread(strcat(obj.LoadDir, '/', obj.LoadLocs(subDir)));
                 % Round to nearest second and concatenate
                 data = data(1:floor(length(data)/obj.fs)*obj.fs);
                 data_full = [data_full; data];
@@ -81,50 +81,50 @@ classdef PedalAnalyser
             audio_boundaries = [];
             % Create holder for the chirp trains
             ChirpTrains = SignalHolder();
-            f_st = 0.5*obj.f_st;
-            f_en = 1.25*obj.f_en;
-            fs = obj.fs;
+            F_ST = 0.5*obj.f_st;
+            F_EN = 1.25*obj.f_en;
+            FS = obj.fs;
 
             % Split dataset into segments of seg_len length
             for n = 1:floor((length(data_full)/obj.fs)/seg_len)
                 % Take chunk of audio
-                aud_ch = data_full((n-1)*obj.fs*seg_len + 1:n*obj.fs*seg_len);
+                aud_ch = data_full((n-1)*FS*seg_len + 1:n*FS*seg_len);
 
                 % Generate a chirp train and get the signal
-                ChirpTrains = ChirpTrains.SigGen(method, ch_len, ch_spc, f_st, f_en, T, fs);
+                ChirpTrains = ChirpTrains.SigGen(method, ch_len, ch_spc, F_ST, F_EN, T, FS);
                 chirps = ChirpTrains.SigGet(n);
 
                 % Adjust the chirp start times
                 ch_sts = ChirpTrains.Signals{n, 'chirp_starts'}{1,1};
                 ChirpTrains.Signals{n, 'chirp_starts'} = {ch_sts + (n-1)*(seg_len + T)};
                 
-                chirp_boundaries(end+1,1:2) = [length(data_chirp_full) + 1,length(data_chirp_full) + T*fs];
-                audio_boundaries(end+1,1:2) = [length(data_chirp_full) + T*fs + 1, length(data_chirp_full) + T*fs + length(aud_ch)];
+                chirp_boundaries(end+1,1:2) = [length(data_chirp_full) + 1,length(data_chirp_full) + T*FS];
+                audio_boundaries(end+1,1:2) = [length(data_chirp_full) + T*FS + 1, length(data_chirp_full) + T*FS + length(aud_ch)];
                 % Append the audio chunk and chirp train to the audio
                 data_chirp_full = [data_chirp_full; chirps(1:end-1); aud_ch]; 
             end
                 
             % Generate a chirp train and get the signal
-            ChirpTrains = ChirpTrains.SigGen(method, ch_len, ch_spc, f_st, f_en, T, fs);
+            ChirpTrains = ChirpTrains.SigGen(method, ch_len, ch_spc, F_ST, F_EN, T, FS);
             ch_sts = ChirpTrains.Signals{n+1, 'chirp_starts'}{1,1};
             ChirpTrains.Signals{n+1, 'chirp_starts'} = {ch_sts + (n)*(seg_len + T)};
 
-            aud_ch = data_full(n*fs*seg_len + 1:end);
-            ChirpTrains = ChirpTrains.SigGen(method, ch_len, ch_spc, f_st, f_en, T, fs);
+            aud_ch = data_full(n*FS*seg_len + 1:end);
+            ChirpTrains = ChirpTrains.SigGen(method, ch_len, ch_spc, F_ST, F_EN, T, FS);
             ch_sts = ChirpTrains.Signals{n+2, 'chirp_starts'}{1,1};
-            ChirpTrains.Signals{n+2, 'chirp_starts'} = {ch_sts + (n)*(seg_len + T) + T + (length(aud_ch)/fs)};
+            ChirpTrains.Signals{n+2, 'chirp_starts'} = {ch_sts + (n)*(seg_len + T) + T + (length(aud_ch)/FS)};
 
             chirps = ChirpTrains.SigGet(n+1);
             chirpsfinal = ChirpTrains.SigGet(n+2);
 
-            chirp_boundaries(end+1,1:2) = [length(data_chirp_full) + 1,length(data_chirp_full) + T*fs];
-            audio_boundaries(end+1,1:2) = [length(data_chirp_full) + T*fs + 1, length(data_chirp_full) + T*fs + length(aud_ch)];
+            chirp_boundaries(end+1,1:2) = [length(data_chirp_full) + 1,length(data_chirp_full) + T*FS];
+            audio_boundaries(end+1,1:2) = [length(data_chirp_full) + T*FS + 1, length(data_chirp_full) + T*FS + length(aud_ch)];
             data_chirp_full = [data_chirp_full; chirps(1:end-1); aud_ch]; 
             
-            chirp_boundaries(end+1,1:2) = [length(data_chirp_full) + 1,length(data_chirp_full) + T*fs];
+            chirp_boundaries(end+1,1:2) = [length(data_chirp_full) + 1,length(data_chirp_full) + T*FS];
             data_chirp_full = [data_chirp_full; chirpsfinal(1:end-1)];
 
-            audiowrite(strcat(obj.SaveLoc, '-input.wav'), data_chirp_full, fs);
+            audiowrite(strcat(obj.ProcessLoc,'/',obj.PedalName ,[obj.Settings{:}], '-input.wav'), data_chirp_full, FS);
             disp('process dataset with target device and save as ...-output.wav')   
             obj.Aud_Boundaries = audio_boundaries;
             obj.Chirp_Boundaries = chirp_boundaries;
@@ -135,7 +135,7 @@ classdef PedalAnalyser
             ProcSigs = SignalProcessor(obj.PedalName, 0, 0);
 %             ProcSigs.Settings = Settings;
 
-            ProcSignal = SignalProcessor.SigLoad(obj.SaveLoc, 1);
+            ProcSignal = SignalProcessor.SigLoad(strcat(obj.ProcessLoc,'/',obj.PedalName ,[obj.Settings{:}], '-output.wav'), 1);
 
             AnlySig = SignalAnalyser(obj.Signals.Signals, ProcSigs.ProcessedSignals);
             AnlySig = AnlySig.BatchSpecExtract(0.5, ProcSignal);
