@@ -64,7 +64,7 @@ To build this project you'll need
 
 Demonstrate with some nice gifs
 
-[](https://media.giphy.com/media/no1thtOGnlWlajl4Tm/giphy.gif)
+![](https://media.giphy.com/media/no1thtOGnlWlajl4Tm/giphy.gif)
 
 ---
 
