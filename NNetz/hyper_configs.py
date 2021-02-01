@@ -25,18 +25,80 @@ def main(output_dir):
     AvErcut = [200,400,800, 1600, 2000]
     for each in AvErcut:
         dataname.append('EDonnerFlangerAvErcut' + str(each))'''
+
+    '''
     dataname = []
-    Singles = 16
-    for each in range(16):
-        dataname.append('EDonnerFlangerSingles' + str(each + 1))
+    Singles = 6
+    for each in range(Singles):
+        dataname.append('FDonnerFlangerra12c12rg12Singles' + str(each + 1))
+    for each in range(Singles):
+        dataname.append('FDonnerFlangerra12c12rg9Singles' + str(each + 1))
+    '''
 
-    hids = [16]
+    '''
+    dataname = []
+    Singles = 6
+    for each in range(Singles):
+        dataname.append('FDonnerFlangerra12c12rg12Singles' + str(each + 1))
+    for each in range(Singles):
+        dataname.append('FDonnerFlangerra12c12rg9Singles' + str(each + 1))
+    '''
+    '''
+    dataname = []
+    spacing = [5,10,20,30,40,50]
+    for each in spacing:
+        dataname.append('SweetTonePhaser_spc' + str(each) + '_notch2')
+    for each in spacing:
+        dataname.append('SweetTonePhaser_spc' + str(each) + '_notch5')
+    '''
+    '''
+    dataname = []
+    Singles = 6
+    for each in range(Singles):
+        dataname.append('GDonnerFlangerra12c12rg12Singles' + str(each + 1))
+    #for each in range(Singles):
+    #    dataname.append('GDonnerFlangerra12c12rg9Singles' + str(each + 1))
+    #for each in range(Singles):
+    #    dataname.append('GDonnerFlangerra12c12rg3Singles' + str(each + 1))
 
+    hids = [32, 48, 64]
+    '''
+    '''
+    dataname = []
+    Singles = 6
+    for each in range(Singles):
+        dataname.append('HDonnerFlangerra12c9rg9Singles' + str(each + 1))
+    for each in range(Singles):
+        for leach in range(each+1, Singles):
+            dataname.append('HDonnerFlangerra12c9rg9Doubles' + str(each + 1) + str(leach + 1))
+    #for each in range(Singles):
+    #    dataname.append('GDonnerFlangerra12c12rg9Singles' + str(each + 1))
+    #for each in range(Singles):
+    #    dataname.append('GDonnerFlangerra12c12rg3Singles' + str(each + 1))
+    
+    '''
+    '''
+    dataname = []
+    Singles = 3
+    for each in range(Singles):
+        dataname.append('KDonnerFlangerra12c12rg9Singles' + str(each + 1))
+    for each in range(Singles):
+        dataname.append('KDonnerFlangerra12c12rg12Singles' + str(each + 1))
+    for each in range(Singles):
+        dataname.append('KDonnerFlangerra12c12rg3Singles' + str(each + 1))
 
+    hids = [32, 48]
+    '''
+
+    hids = [32, 48, 64]
+
+    dataname = ['JDonnerFlangerDoubles_rg3_rg9','JDonnerFlangerDoubles_rg3_rg12','JDonnerFlangerDoubles_rg9_rg12',
+                'JDonnerFlangerTriple', 'KDonnerFlangerDoubles_rg3_rg9','KDonnerFlangerDoubles_rg3_rg12',
+                'KDonnerFlangerDoubles_rg9_rg12', 'KDonnerFlangerTriple']
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    i = 70
+    i = 600
 
     for pedals in dataname:
         for hid in hids:

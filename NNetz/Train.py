@@ -152,9 +152,9 @@ def test(data, network, dirPath, args):
 
         test_loss = loss_fn(output, data.test_set[1])
 
-        #test_lossclf = loss_fnESR(output, data.test_set[1])
+        test_lossclf = loss_fnESR(output, data.test_set[1])
 
-        #test_lossclf += loss_fnDC(output, data.test_set[1])
+        test_lossclf += loss_fnDC(output, data.test_set[1])
 
         #if args.cond_vals > 1:
         #    for i in range(args.cond_vals):

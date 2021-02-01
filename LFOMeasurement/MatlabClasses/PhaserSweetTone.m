@@ -1,8 +1,8 @@
 function [signal_phasered, LFO] = PhaserSweetTone(signal, speed, fs)
     
-    [signal_phasered, LFO] = PhaserSweetToneSub(signal, fs, speed, 0, 1);
+    [signal_phasered, LFO] = PhaserSweetToneSub(signal, fs, speed, 0, 0);
     
-    LFO = LFO(:,4);
+%     LFO = LFO(:,4);
     
 end
 
@@ -24,13 +24,13 @@ function [signal_phasered, LFO] = PhaserSweetToneSub(signal, fs, speed, LFO_swit
 
 %Default values:
 g = 0.5;    %This corresponds to the case g = w = 0.5
-fb_n = 1;   %By changing this value, the allpass filter to which feedback
+fb_n = 2;   %By changing this value, the allpass filter to which feedback
             %returns is changed. This changes the tone of the feedback etc.
             %Can accept values between 1 and 10.
 
 %If feedback-switch is on:
 if feedback == 1
-    fb = 0.4;   %Change this value if different amounts of feedback is wanted
+    fb = 0.1;   %Change this value if different amounts of feedback is wanted
 else
     fb = 0;     %If no feedback is wanted, then it is set to 0.
 end
@@ -42,9 +42,13 @@ LFO_single = generate_LFO(speed, fs, LFO_switch);
 %to generate long LFO-signal that can be used to model the phaser.
 LFO = LFO_single;
 
-while length(LFO(:,1)) < length(signal)*1.4  %We want to make sure it's long enough
+while length(LFO(:,1)) < length(signal)*1.2  %We want to make sure it's long enough
    LFO = [LFO; LFO_single]; 
 end
+
+% LFO = LFO(randi(round(fs/speed)):end,:);
+% LFO = LFO(1:round(length(signal)*1.05),:);
+% plot(LFO(:,5))
 
 %Then pass the input signal through a phaser:
 signal_phasered = phasing_algorithm(signal, fs, g, fb, LFO, fb_n);

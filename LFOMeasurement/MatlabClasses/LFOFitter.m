@@ -214,7 +214,7 @@ classdef LFOFitter
 %             Amp = max(lfo) - min(lfo);
 %             C = min(lfo);
             
-            [m,i] = max(lfo(tAx< tAx(1) + T_init));
+            [m,i] = max(smooth(lfo(tAx< tAx(1) + T_init*1), 30));
             
             test_freqs = linspace(f_init*0.9, f_init*1.1, 50);
             
@@ -249,10 +249,10 @@ classdef LFOFitter
             
 %             plot([t1,t2], si*Amp*abs(sin(f*pi*[t1,t2] + phi)) + C)
             
-            plot(tAx,lfo_p)
-            hold on
-            plot(tAx,lfo)
-            hold off
+%             plot(tAx,lfo_p)
+%             hold on
+%             plot(tAx,lfo)
+%             hold off
             
             params = [f, phi];
         end

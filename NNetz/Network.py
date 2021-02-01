@@ -15,7 +15,7 @@ class RNN(nn.Module):
 
         self.layers = nn.ModuleList()
         # Create recurrent layer of the type specified by unit_type
-        cell_types = {'LSTM': nn.LSTM, 'GRU': nn.GRU}
+        cell_types = {'': nn.RNN,'LSTM': nn.LSTM, 'GRU': nn.GRU}
         try:
             for n in range(self.num_layers):
                 self.layers.append(BasicBlock(self.hidden_size, self.input_size))
@@ -55,7 +55,6 @@ class BasicBlock(nn.Module):
         res = x
         x, self.hidden = self.rec(x, self.hidden)
         x = self.lin(x) + res[:, :, 0:1]
-
         return x
 
     # Initialise hidden state with zeros

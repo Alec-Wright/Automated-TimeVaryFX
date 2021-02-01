@@ -36,7 +36,7 @@ classdef SignalProcessor
             new_row = {{}, tst_sig(end), rate, SNR, {}, {}};
             obj.ProcessedSignals = [obj.ProcessedSignals; new_row];
             
-            if obj.Digi
+            if obj.Digi == 1
                 [proc_sig, LFO_real] = feval(obj.PedalName,...
                                     tst_sig(1:end-1), rate,fs);               
                 obj.ProcessedSignals{end,'LFO_real'} = {LFO_real};
@@ -49,6 +49,8 @@ classdef SignalProcessor
                     obj.ProcessedSignals{end,'nois_sig'} = {noise};
                 end
                 obj.ProcessedSignals{end,'processed_signal'} = {proc_sig};
+            elseif obj.Digi == 2
+                
             else
             % Add the bit where the test signal is saved to file so it can
             % be processed by the pedal
@@ -66,9 +68,9 @@ classdef SignalProcessor
         function [out] = SigLoad(loc, channels)
             in = audioread(strcat(loc ,'-input.wav'));
             out = audioread(strcat(loc ,'-output.wav'));
-            [r, lags] = xcorr(in(1:44100*10), out(1:44100*10,2));
-            [~, i] = max(r);
-            out = out(-lags(i) + 1:-lags(i) + length(in),1:channels);
+            b =  find( out(1:44100*2,2) > 1e-3, 1 );
+
+            out = out(b - 22050 + 1:b - 22050 + length(in),1:channels);
         end
     end
 end

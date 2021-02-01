@@ -5,7 +5,7 @@ import math
 
 # Class which reads the data from either np or wav files
 class DataSet:
-    def __init__(self, args):
+    def __init__(self):
         try:
             # Try and load data from numpy files
             inp_train = np.load(args.data_location + '/npData/train/' + args.pedal + '-input.npy')
