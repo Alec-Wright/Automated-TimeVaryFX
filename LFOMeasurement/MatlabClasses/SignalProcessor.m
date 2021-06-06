@@ -1,31 +1,34 @@
 classdef SignalProcessor
     properties
         ProcessedSignals
+        ProcessedAudio
         PedalName
-        Digi
         Rate
         Settings
         SaveLoc
         
     end
     methods
-        function obj = SignalProcessor(PedalName, Digi, Rate)
-            obj.Digi = Digi;
+        function obj = SignalProcessor(PedalName, Rate)
             obj.PedalName = PedalName;
             obj.Rate = Rate;
            
             table_header = [["processed_signal", "cell"]; ...
                         ["signal_number", "int16"]; ...
                         ["rate", "double"]];
-                    
-            table_header = [table_header; ...
-                           ["SNR", "double"]; ...
-                           ["LFO_real", "cell"]; ...
-                           ["nois_sig", "cell"]];
                        
             
             % Make table using fieldnames & value types from above
             obj.ProcessedSignals = ...
+                table('Size',[0,size(table_header,1)],... 
+                'VariableNames', table_header(:,1),...
+                'VariableTypes', table_header(:,2));
+            
+            table_header = [["processed_audio", "cell"]; ...
+            ["preceeding_sig", "cell"]];
+                       
+            % Make table using fieldnames & value types from above
+            obj.ProcessedAudio = ...
                 table('Size',[0,size(table_header,1)],... 
                 'VariableNames', table_header(:,1),...
                 'VariableTypes', table_header(:,2));
@@ -58,8 +61,48 @@ classdef SignalProcessor
                 disp('process file and add -output to end of file name')
                 pause
             end
+        end
+        function obj = LoadFromFile(obj, loc, Signals)
+            
+            in = audioread(strcat(loc ,'-input.wav'));
+            [out, fs] = audioread(strcat(loc ,'-output.wav'));
+            out = 0.95*out./max(abs(out));
+            
+            b = find(abs(out(1:44100*5)) > 1e-2, 1);
+            
+            if b < fs/2
+                out = [zeros((fs/2)-b, 1); out];
+            else
+                out = out(b - (fs/2):end);
+            end
+            
+            if length(out) > length(in)
+                out = out(1:length(in));
+            elseif length(out) < length(in)
+                out = [out; zeros(length(in) - length(out), 1)];
+            end
+            
+            st = 0;
+            for n = 1:size(Signals.Signals,1)
+                T = Signals.Signals{n,'T'};
+                fs = Signals.Signals{n,'fs'};
+                en = st + T;
+                
+                new_row = {{out((st*fs) + 1:en*fs)}, n, obj.Rate};
+                obj.ProcessedSignals = [obj.ProcessedSignals; new_row];
+                
+                if Signals.Signals{n,'chunk_len'} > 0 
+                    aud_st = en;
+                    aud_en = en + Signals.Signals{n,'chunk_len'};
+                    new_row = {{out((aud_st*fs) + 1:aud_en*fs)}, n};
+                    obj.ProcessedAudio = [obj.ProcessedAudio; new_row];
+                end
+                
+                st = en + Signals.Signals{n,'chunk_len'};
+            end
             
         end
+            
         function signal = SigGet(obj, sig_num)
             signal = obj.ProcessedSignals{sig_num,'processed_signal'}{1,1};
         end
@@ -70,7 +113,7 @@ classdef SignalProcessor
             out = audioread(strcat(loc ,'-output.wav'));
             b =  find( out(1:44100*2,2) > 1e-3, 1 );
 
-            out = out(b - 22050 + 1:b - 22050 + length(in),1:channels);
+            out = out(b - 22050 + 1:b - 22050 + length(in),1);
         end
     end
 end

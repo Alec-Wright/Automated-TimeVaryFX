@@ -1,0 +1,3 @@
+[submodule "NeuralNets/CoreAudioML"]
+	path = NeuralNets/CoreAudioML
+	url = https://github.com/Alec-Wright/CoreAudioML.git

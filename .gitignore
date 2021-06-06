@@ -2,3 +2,10 @@
 *.mat
 *.asv
 *.DS_Store
+LFOMeasurement/RawData/BehPhaser_Toneoff-input.wav
+.idea
+.idea/*
+LFOMeasurement/DataSort.m
+LFOMeasurement/MatlabClasses/DataSetInput.m
+LFOMeasurement/MatlabClasses/LFOFitter.m
+LFOMeasurement/MatlabClasses/PedalAnalyser.m
