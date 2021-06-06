@@ -207,6 +207,41 @@ classdef LFOFitter
             predmax = sqrt(A^2 + B^2);
             LFO_pred = predmax.*((LFO_pred-C)./predmax).^n + C;
         end
+        
+        function [lfo_p, params] = LegacySineFit(lfo, tAx, f_init, Amp, C)
+
+            %options = optimoptions('lsqnonlin',...
+            %'FunctionTolerance', 1e-15, 'StepTolerance', 1e-15,...
+            %'OptimalityTolerance', 1e-15);
+            
+            A = max(lfo) - min(lfo);
+            B = min(lfo);
+
+            rectSin = @(p) p(3)*abs(sin(2*pi*tAx*(p(1)/2) + p(2)/2)) + p(4) - lfo;
+            
+            r = 20;
+            freqs = linspace(0.45,0.55, r);
+            errers = zeros(r,1);
+            xes = zeros(r,4);
+
+            for runs = 1:r
+                
+                p = [freqs(runs),0.5, A, B];
+                
+                xes(runs,:) = lsqnonlin(rectSin, p);
+
+                errers(runs) = mean(rectSin(xes(runs,:)).^2);
+
+            end
+            
+            [~,i] = min(errers);
+            
+            p = xes(i,:);
+            
+            lfo_p = p(3)*abs(sin(2*pi*tAx*(p(1)/2) + p(2)/2)) + p(4);
+            params = p;
+                           
+        end
 
         function [lfo_p, params] = SimpleSineFit(lfo, tAx, f_init, Amp, C)
             T_init = 1/f_init;
@@ -214,9 +249,11 @@ classdef LFOFitter
 %             Amp = max(lfo) - min(lfo);
 %             C = min(lfo);
             
-            [m,i] = max(lfo(tAx< tAx(1) + T_init));
+            [m,i] = max(smooth(lfo(tAx< tAx(1) + T_init*1), 30));
             
-            test_freqs = linspace(f_init*0.9, f_init*1.1, 50);
+            r = 20;
+            test_freqs = linspace(f_init*0.9, f_init*1.1, 200);
+            test_freqs = linspace(0.45,0.55, r);
             
             best_error = 1e12;
             errormat = zeros(length(test_freqs), 1);
@@ -234,7 +271,7 @@ classdef LFOFitter
 %                 hold off
                 
                 error = mean((lfo-pred_lfo).^2);
-                error_mat(n) = error;
+                errormat(n) = error;
                 if error < best_error
                     best_error = error;
                     
@@ -249,10 +286,10 @@ classdef LFOFitter
             
 %             plot([t1,t2], si*Amp*abs(sin(f*pi*[t1,t2] + phi)) + C)
             
-            plot(tAx,lfo_p)
-            hold on
-            plot(tAx,lfo)
-            hold off
+%             plot(tAx,lfo_p)
+%             hold on
+%             plot(tAx,lfo)
+%             hold off
             
             params = [f, phi];
         end

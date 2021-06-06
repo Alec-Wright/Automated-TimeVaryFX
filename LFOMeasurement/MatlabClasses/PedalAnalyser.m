@@ -3,6 +3,7 @@ classdef PedalAnalyser
         PedalName
         fs
         Settings
+        Digi
         
         ProcessLoc
         SaveDir
@@ -26,7 +27,7 @@ classdef PedalAnalyser
         f_en
     end
     methods
-        function obj = PedalAnalyser(PedalName, Settings, fs, ...
+        function obj = PedalAnalyser(PedalName, Digi, Settings, fs, ...
                 ProcessLoc, SaveDir, SaveLocs, LoadDir, LoadLocs)
             obj.PedalName = PedalName;
             obj.fs = fs;
@@ -36,12 +37,13 @@ classdef PedalAnalyser
             obj.SaveLocs = SaveLocs;
             obj.LoadDir = LoadDir;
             obj.LoadLocs = LoadLocs;
+            obj.Digi = Digi;
         end
-        function obj = PrelimAnalysisGen(obj, c_ty, ch_l, ch_s, f_st, f_en, T)
+        function obj = PrelimAnalysisGen(obj, c_ty, ch_stk, ch_l, ch_s, f_st, f_en, T)
             Sigs = SignalHolder();
-            Sigs = Sigs.SigGen(c_ty, ch_l, ch_s, f_st, f_en, T, obj.fs);
+            Sigs = Sigs.SigGen(c_ty, ch_stk, ch_l, ch_s, f_st, f_en, T, obj.fs);
             
-            PSigs = SignalProcessor(obj.PedalName, 0, obj.Settings);
+            PSigs = SignalProcessor(obj.PedalName, obj.Digi, obj.Settings);
             PSigs.SaveLoc = strcat(obj.ProcessLoc, '/', obj.PedalName,...
                 '_',[obj.Settings{:}], '-pre');
             PSigs = PSigs.SigProc(Sigs.SigGet(1),obj.Settings, 40, obj.fs);
@@ -50,19 +52,21 @@ classdef PedalAnalyser
             obj.PmProcSigs = PSigs;
         end
         function obj = PrelimSigAnalayse(obj)
-            sig = SignalProcessor.SigLoad(obj.PmProcSigs.SaveLoc, 1);
-            obj.PmProcSigs.ProcessedSignals{1,1} = {sig};
+            if ~obj.Digi
+                sig = SignalProcessor.SigLoad(obj.PmProcSigs.SaveLoc, 1);
+                obj.PmProcSigs.ProcessedSignals{1,1} = {sig};
+            end
             
             obj.PmAnly = SignalAnalyser...
                     (obj.PmSigs.Signals, obj.PmProcSigs.ProcessedSignals);
-            obj.PmAnly = obj.PmAnly.SpecExtract(0.1, 1);
+            obj.PmAnly = obj.PmAnly.SpecExtract(0.5, 1);
             obj.PmAnly = obj.PmAnly.PrelimAnly(1);
 
             obj.init_f = obj.PmAnly.Initial_f;
             obj.f_st = obj.PmAnly.Min_f;
             obj.f_en = obj.PmAnly.Max_f;
         end
-        function obj = ConstructInputData(obj, method, ch_len, ch_spc, T, seg_len)
+        function obj = ConstructInputData(obj, method, ch_stk, ch_len, ch_spc, T, seg_len)
             
             Boundaries = [0];
             data_full = [];
@@ -81,7 +85,7 @@ classdef PedalAnalyser
             audio_boundaries = [];
             % Create holder for the chirp trains
             ChirpTrains = SignalHolder();
-            F_ST = 0.5*obj.f_st;
+            F_ST = 0.75*obj.f_st;
             F_EN = 1.25*obj.f_en;
             FS = obj.fs;
 
@@ -91,7 +95,7 @@ classdef PedalAnalyser
                 aud_ch = data_full((n-1)*FS*seg_len + 1:n*FS*seg_len);
 
                 % Generate a chirp train and get the signal
-                ChirpTrains = ChirpTrains.SigGen(method, ch_len, ch_spc, F_ST, F_EN, T, FS);
+                ChirpTrains = ChirpTrains.SigGen(method, ch_stk, ch_len, ch_spc, F_ST, F_EN, T, FS);
                 chirps = ChirpTrains.SigGet(n);
 
                 % Adjust the chirp start times
@@ -105,40 +109,42 @@ classdef PedalAnalyser
             end
                 
             % Generate a chirp train and get the signal
-            ChirpTrains = ChirpTrains.SigGen(method, ch_len, ch_spc, F_ST, F_EN, T, FS);
+            ChirpTrains = ChirpTrains.SigGen(method, ch_stk, ch_len, ch_spc, F_ST, F_EN, T, FS);
             ch_sts = ChirpTrains.Signals{n+1, 'chirp_starts'}{1,1};
             ChirpTrains.Signals{n+1, 'chirp_starts'} = {ch_sts + (n)*(seg_len + T)};
+            chirps = ChirpTrains.SigGet(n+1);
+            chirp_boundaries(end+1,1:2) = [length(data_chirp_full) + 1,length(data_chirp_full) + T*FS];
+            data_chirp_full = [data_chirp_full; chirps(1:end-1)]; 
 
             aud_ch = data_full(n*FS*seg_len + 1:end);
-            ChirpTrains = ChirpTrains.SigGen(method, ch_len, ch_spc, F_ST, F_EN, T, FS);
-            ch_sts = ChirpTrains.Signals{n+2, 'chirp_starts'}{1,1};
-            ChirpTrains.Signals{n+2, 'chirp_starts'} = {ch_sts + (n)*(seg_len + T) + T + (length(aud_ch)/FS)};
+            if aud_ch
+                ChirpTrains = ChirpTrains.SigGen(method, ch_stk, ch_len, ch_spc, F_ST, F_EN, T, FS);
+                ch_sts = ChirpTrains.Signals{n+2, 'chirp_starts'}{1,1};
+                ChirpTrains.Signals{n+2, 'chirp_starts'} = {ch_sts + (n)*(seg_len + T) + T + (length(aud_ch)/FS)};
+                chirpsfinal = ChirpTrains.SigGet(n+2);
+                
+                audio_boundaries(end+1,1:2) = [length(data_chirp_full) + 1, length(data_chirp_full) + length(aud_ch)];
+                data_chirp_full = [data_chirp_full; aud_ch];
+                
+                chirp_boundaries(end+1,1:2) = [length(data_chirp_full) + 1, length(data_chirp_full) + T*FS];
+                data_chirp_full = [data_chirp_full; chirpsfinal(1:end-1)];
+            end
 
-            chirps = ChirpTrains.SigGet(n+1);
-            chirpsfinal = ChirpTrains.SigGet(n+2);
-
-            chirp_boundaries(end+1,1:2) = [length(data_chirp_full) + 1,length(data_chirp_full) + T*FS];
-            audio_boundaries(end+1,1:2) = [length(data_chirp_full) + T*FS + 1, length(data_chirp_full) + T*FS + length(aud_ch)];
-            data_chirp_full = [data_chirp_full; chirps(1:end-1); aud_ch]; 
-            
-            chirp_boundaries(end+1,1:2) = [length(data_chirp_full) + 1,length(data_chirp_full) + T*FS];
-            data_chirp_full = [data_chirp_full; chirpsfinal(1:end-1)];
-
-            audiowrite(strcat(obj.ProcessLoc,'/',obj.PedalName ,[obj.Settings{:}], '-input.wav'), data_chirp_full, FS);
+            audiowrite(strcat(obj.ProcessLoc,'/',obj.PedalName,'_' ,[obj.Settings{:}], '-input.wav'), data_chirp_full, FS);
             disp('process dataset with target device and save as ...-output.wav')   
             obj.Aud_Boundaries = audio_boundaries;
             obj.Chirp_Boundaries = chirp_boundaries;
             obj.Data_Boundaries = Boundaries;
             obj.Signals = ChirpTrains;
         end
-        function obj = ReadTargetData(obj)
+        function obj = ReadTargetData(obj, track_mode)
             ProcSigs = SignalProcessor(obj.PedalName, 0, 0);
 %             ProcSigs.Settings = Settings;
 
-            ProcSignal = SignalProcessor.SigLoad(strcat(obj.ProcessLoc,'/',obj.PedalName ,[obj.Settings{:}], '-output.wav'), 1);
+            ProcSignal = SignalProcessor.SigLoad(strcat(obj.ProcessLoc,'/',obj.PedalName,'_',[obj.Settings{:}]), 1);
 
             AnlySig = SignalAnalyser(obj.Signals.Signals, ProcSigs.ProcessedSignals);
-            AnlySig = AnlySig.BatchSpecExtract(0.5, ProcSignal);
+            AnlySig = AnlySig.BatchSpecExtract(1, ProcSignal);
 
             AnlySig.Min_f = obj.f_st;
             AnlySig.Max_f = obj.f_en;
@@ -146,7 +152,7 @@ classdef PedalAnalyser
 
             % Retrieve Chirp Trains from processed audio
             for n = 1:size(obj.Signals.Signals,1)
-                AnlySig = AnlySig.LFOTrack(n, 5, 2);
+                AnlySig = AnlySig.LFOTrack(n, 1, track_mode);
             end
             
             obj.AnlySig = AnlySig;
@@ -199,10 +205,10 @@ classdef PedalAnalyser
 %                 error1 - error2
 %                 maxe1 - maxe2
 
-%                 plot([tAx1;tAx2], [lfo1;lfo2]);
-%                 hold on
-%                 plot([tAx1;tAx2], lfoP);
-%                 hold off
+                plot([tAx1;tAx2], [lfo1;lfo2]);
+                hold on
+                plot([tAx1;tAx2], lfoP);
+                hold off
                 if inv == 1
                    Amp = pre_Amp;
                    C = pre_C + pre_Amp;
@@ -216,7 +222,7 @@ classdef PedalAnalyser
 
             obj.LFOs = {param_mat};
         end
-        function obj = DataMake(obj, inv)
+        function obj = DataMake(obj, inv, min_f, max_f)
             
             full_lfo = [];
             full_tAx = [];
@@ -256,8 +262,8 @@ classdef PedalAnalyser
 %                 hold off
             end
 
-            full_lfo = full_lfo - min(full_lfo);
-            full_lfo = full_lfo/max(full_lfo);
+            full_lfo = full_lfo - min_f;
+            full_lfo = full_lfo/max_f;
             
             Input = [];
             Target = [];
@@ -280,10 +286,7 @@ classdef PedalAnalyser
                 Target = [Target; Targ];
             end
             
-            Input(:,1) = Input(:,1)/max(abs(Input(:,1)));
-            Input(:,1) = Input(:,1)*0.95;
-            Target = Target/max(abs(Target));
-            Target = Target*0.95;
+
             
             for subDir = 1:length(obj.DataLocs)
                 
@@ -614,7 +617,7 @@ classdef PedalAnalyser
             writematrix(winners,strcat('AvErcut', num2str(N), '.csv')) 
 
         end
-        function obj = DataMakeSingles(obj, inv)
+        function obj = DataMakeSingles(obj, inv, min_f, max_f)
             
             full_lfo = [];
             full_tAx = [];
@@ -629,6 +632,9 @@ classdef PedalAnalyser
                 si = 1;
             end
             
+            Amp = mean(obj.LFOs{1,1}(:,3));
+            C = mean(obj.LFOs{1,1}(:,4));
+            
             for n = 1:size(obj.AnlySig.Measured_LFOs,1) - 1
 
                 full_lfo = [full_lfo; obj.AnlySig.Measured_LFOs{n,1}{1,1}];
@@ -636,8 +642,8 @@ classdef PedalAnalyser
 
                 f = obj.LFOs{1,1}(n,1);
                 phi = obj.LFOs{1,1}(n,2);
-                Amp = obj.LFOs{1,1}(n,3);
-                C = obj.LFOs{1,1}(n,4);
+%                 Amp = obj.LFOs{1,1}(n,3);
+%                 C = obj.LFOs{1,1}(n,4);
 
                 aud_tAx = Aud_Times(n,1):1/obj.fs:Aud_Times(n,2);
                 aud_lfo = si*Amp*abs(sin(f*pi*aud_tAx + phi)) + C;
@@ -646,21 +652,21 @@ classdef PedalAnalyser
                 full_tAx = [full_tAx; aud_tAx'];
 
                 
-%                 t1 = obj.AnlySig.Measured_LFOs{n,2}{1,1};
-%                 t2 = obj.AnlySig.Measured_LFOs{n+1,2}{1,1};
-%                 plot(t1, obj.AnlySig.Measured_LFOs{n,1}{1,1})
-%                 hold on
-%                 plot(t2, obj.AnlySig.Measured_LFOs{n+1,1}{1,1})
-% %                 plot(aud_tAx, aud_lfo)
-%                 plot([t1,t2], si*Amp*abs(sin(f*pi*[t1,t2] + phi)) + C)
-%                 hold off
+                t1 = obj.AnlySig.Measured_LFOs{n,2}{1,1};
+                t2 = obj.AnlySig.Measured_LFOs{n+1,2}{1,1};
+                plot(t1, obj.AnlySig.Measured_LFOs{n,1}{1,1})
+                hold on
+                plot(t2 - 75, obj.AnlySig.Measured_LFOs{n+1,1}{1,1})
+%                 plot(aud_tAx, aud_lfo)
+                plot([t1; t2 - 75], si*Amp*abs(sin(f*pi*[t1;t2] + phi)) + C)
+                hold off
             end
 
-            full_lfo = full_lfo - min(full_lfo);
-            full_lfo = full_lfo/max(full_lfo);
+            full_lfo = full_lfo - min_f;
+            full_lfo = full_lfo/max_f;
             
             
-            ProcSignal = SignalProcessor.SigLoad(obj.SaveLoc, 2);
+            ProcSignal = SignalProcessor.SigLoad(strcat(obj.ProcessLoc,'/',obj.PedalName, '_' ,[obj.Settings{:}]), 2);
             Input_Raw = ProcSignal(:, 2);
             Target_Raw = ProcSignal(:, 1);
             
@@ -679,9 +685,9 @@ classdef PedalAnalyser
             
                 t_l = length(Target);
                 t_l_s = t_l/obj.fs;
-                boundies = [0, 0.85, 0.975, 1];
+                boundies = [0, 0.75, 0.875, 1];
 
-                for subDir = 1:length(obj.DataLocs)
+                for subDir = 1:length(obj.SaveLocs)
 
     %                 st = obj.Data_Boundaries(subDir) + 1;
     %                 en = obj.Data_Boundaries(subDir + 1);
@@ -690,7 +696,7 @@ classdef PedalAnalyser
                     en_sec = floor(boundies(subDir + 1)*t_l_s);
                     en = en_sec*obj.fs;
 
-                    loc = strcat(obj.DataDir, obj.DataLocs(subDir), '/', obj.PedalName);
+                    loc = strcat(obj.SaveDir, obj.SaveLocs(subDir), '/', obj.PedalName, [obj.Settings{:}]);
                     audiowrite(strcat(loc, 'Singles', num2str(n), '-input.wav'), Input(st:en, :), fs);
                     audiowrite(strcat(loc, 'Singles', num2str(n), '-target.wav'), Target(st:en, :), fs);
                 end
